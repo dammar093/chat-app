@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userLogin = exports.userSignup = void 0;
+exports.userLogout = exports.userMe = exports.userLogin = exports.userSignup = void 0;
 const user_model_1 = __importStar(require("../models/user.model"));
 const generateJwtToken_1 = __importDefault(require("../utils/generateJwtToken"));
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
@@ -98,4 +98,20 @@ exports.userLogin = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, 
     catch (err) {
         return res.status(500).json({ message: err.message, success: false, data: null });
     }
+}));
+exports.userMe = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // @ts-ignore
+        const user = yield user_model_1.default.findById(req.user.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found.", success: false, data: null });
+        }
+        return res.status(200).json({ message: "User fetched successfully.", success: true, data: user });
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message, success: false, data: null });
+    }
+}));
+exports.userLogout = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    return res.clearCookie("token").status(200).json({ message: "User logged out successfully.", success: true, data: null });
 }));

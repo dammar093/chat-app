@@ -62,9 +62,16 @@ export const userLogin = asyncHandler(
 
 export const userMe = asyncHandler(
   async (req: Request, res: Response) => {
-    // @ts-ignore
-    const user = await User.findById(req.user._id).select("-password");
-    return res.status(200).json({ message: "User fetched successfully.", success: true, data: user });
+    try {
+      // @ts-ignore
+      const user = await User.findById(req.user.id).select("-password");
+      if (!user) {
+        return res.status(404).json({ message: "User not found.", success: false, data: null });
+      }
+      return res.status(200).json({ message: "User fetched successfully.", success: true, data: user });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message, success: false, data: null });
+    }
   });
 
 export const userLogout = asyncHandler(

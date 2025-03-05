@@ -1,7 +1,9 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { app, io, server } from "./lib/socket";
+
 //import all router
 import authRouter from "./routes/auth.route";
 import connectDB from "./lib/db";
@@ -15,9 +17,13 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 // middleware
-app.use(cors())
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // routes middleware
 app.use("/api/v1/auth", authRouter);
