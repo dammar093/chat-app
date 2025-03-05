@@ -10,6 +10,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const socket_1 = require("./lib/socket");
 //import all router
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
+const user_route_1 = __importDefault(require("./routes/user.route"));
 const db_1 = __importDefault(require("./lib/db"));
 // connect to database
 (0, db_1.default)();
@@ -26,6 +27,7 @@ socket_1.app.use(express_1.default.urlencoded({ extended: true }));
 socket_1.app.use((0, cookie_parser_1.default)());
 // routes middleware
 socket_1.app.use("/api/v1/auth", auth_route_1.default);
+socket_1.app.use("/api/v1/users", user_route_1.default);
 socket_1.app.get("/", (req, res) => {
     res.send("Hello World");
 });

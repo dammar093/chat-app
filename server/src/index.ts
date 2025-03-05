@@ -6,6 +6,7 @@ import { app, io, server } from "./lib/socket";
 
 //import all router
 import authRouter from "./routes/auth.route";
+import userRouter from "./routes/user.route";
 import connectDB from "./lib/db";
 
 // connect to database
@@ -27,6 +28,7 @@ app.use(cookieParser());
 
 // routes middleware
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
