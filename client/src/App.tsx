@@ -5,8 +5,13 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import toast, { Toaster } from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "./state/slices/store";
 
 function App() {
+  const token =
+    useSelector((state: RootState) => state.auth.token) ||
+    localStorage.getItem("token");
   useEffect(() => {
     const socket = io("http://localhost:3000", {
       withCredentials: true,
@@ -26,9 +31,9 @@ function App() {
     <>
       <Toaster />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/" element={token ? <Home /> : <Login />} />
+        <Route path="/login" element={!token ? <Login /> : <Home />} />
+        <Route path="/signup" element={!token ? <SignUp /> : <Home />} />
       </Routes>
     </>
   );
