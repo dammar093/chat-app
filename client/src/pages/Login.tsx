@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { login } from "../state/slices/api/api";
 import { AppDispatch } from "../state/slices/store";
 import { useDispatch } from "react-redux";
