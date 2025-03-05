@@ -59,3 +59,15 @@ export const userLogin = asyncHandler(
     }
   }
 )
+
+export const userMe = asyncHandler(
+  async (req: Request, res: Response) => {
+    // @ts-ignore
+    const user = await User.findById(req.user._id).select("-password");
+    return res.status(200).json({ message: "User fetched successfully.", success: true, data: user });
+  });
+
+export const userLogout = asyncHandler(
+  async (req: Request, res: Response) => {
+    return res.clearCookie("token").status(200).json({ message: "User logged out successfully.", success: true, data: null });
+  });
