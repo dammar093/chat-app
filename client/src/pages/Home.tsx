@@ -1,43 +1,27 @@
-import {
-  ChangeEvent,
-  FormEvent,
-  useEffect,
-  useCallback,
-  useState,
-} from "react";
-import {
-  getAllUsers,
-  getMessage,
-  logout,
-  sendMessage,
-} from "../state/slices/api/api";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "../state/slices/store";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { sendMessage } from "../state/slices/api/api";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../state/slices/store";
 import { formatMessageTime } from "../utils/utils";
 import toast from "react-hot-toast";
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
+import Sidebar from "../components/Sidebar";
+import { setOnline } from "../state/slices/onlineSlice";
+import { addMessage } from "../state/slices/messageSlice";
 
 const Home = () => {
-  const [users, setUsers] = useState([]);
   const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<any>([]);
-  const [activeIndex, setActiveIndex] = useState<Number | null>(null);
-  const navigate = useNavigate();
   const [showChat, setShowChat] = useState<boolean>(false);
   const [receiver, setReceiver] = useState<string>("");
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
   const currentUser = useSelector((state: RootState) => state.user);
+  const messages = useSelector((state: RootState) => state.messages.messages);
 
   useEffect(() => {
     if (!currentUser) return;
     const newSocket = io("http://localhost:3000", {
       query: { userId: currentUser._id },
     });
-
-    setSocket(newSocket);
-
     newSocket.on("connect", () => {
       console.log(`Connected to server with id ${newSocket.id}`);
     });
@@ -46,98 +30,27 @@ const Home = () => {
       toast.success(data);
     });
     newSocket.on("getOnlineUsers", (userIds) => {
-      setOnlineUsers(userIds);
+      dispatch(setOnline(userIds));
     });
     newSocket?.on("newMessage", (data) => {
-      setMessages((prev: any) => [...prev, data]);
+      dispatch(addMessage(data));
     });
     return () => {
       newSocket.disconnect();
     };
-  }, [currentUser]);
-
-  useEffect(() => {
-    getAll();
-    console.log("dfdsfs", messages);
-  }, [messages]);
-  async function getAll() {
-    const users = await getAllUsers();
-    setUsers(users);
-  }
-
-  const handleUserMessage = async (index: number, id: string) => {
-    setActiveIndex(index);
-    setShowChat(true);
-    setReceiver(id);
-    const messages = await getMessage(id);
-    setMessages(messages);
-  };
+  }, [currentUser, dispatch]);
 
   const insertMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!message) return;
     const data = await sendMessage(receiver, message);
-    setMessages((prev: any) => [...prev, data]);
+    dispatch(addMessage(data));
     setMessage("");
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-    socket?.disconnect();
   };
 
   return (
     <main className="w-full h-screen flex justify-between">
-      <aside className="bg-gray-800 w-64 h-full shadow-lg relative">
-        {users.map((user: any, index: number) => (
-          <div
-            key={user._id}
-            className={`p-2 border-b border-gray-700 flex items-center gap-3 cursor-pointer ${
-              activeIndex == index && "bg-slate-500"
-            } ${user._id == currentUser._id && "hidden"}`}
-            onClick={() => handleUserMessage(index, user._id)}
-          >
-            <div className="relative">
-              <img
-                className="w-10 h-10 rounded-full"
-                src={user?.profilePic}
-                alt={user?.name}
-              />
-              <div
-                className={`absolute w-2 h-2 bg-green-400 top-0 right-0 rounded-full ${
-                  onlineUsers.includes(user._id) ? "block" : "hidden"
-                }`}
-              ></div>
-            </div>
-            <span className="text-white font-semibold">{user?.name}</span>
-          </div>
-        ))}
-        <div className="w-full absolute bottom-0 left-0 right-0">
-          <button
-            className="w-full flex items-center justify-center bg-teal-400 py-2 px-4 cursor-pointer"
-            onClick={handleLogout}
-          >
-            <span>Logout</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-log-out"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" x2="9" y1="12" y2="12" />
-            </svg>
-          </button>
-        </div>
-      </aside>
+      <Sidebar setReceiver={setReceiver} setShowChat={setShowChat} />
       <div className="w-full h-full relative">
         <div className="w-full h-[550px] bg-slate-700 px-5 flex flex-col overflow-y-auto pb-10">
           {messages.length > 0 &&
