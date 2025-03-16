@@ -43,3 +43,25 @@ export const getAllUsers = async () => {
     toast.error(error.response.data.message);
   }
 }
+
+//get message 
+
+export const getMessage = async (id: string) => {
+  try {
+    const res = await api.get(`/api/v1/messages/${id}`);
+    return res.data.data;
+  } catch (error: any) {
+    toast.error(error.response.data.message);
+  }
+}
+export const sendMessage = async (id: string, message: string) => {
+  try {
+    const res = await api.post(`/api/v1/messages/${id}`, {
+      message: message
+    });
+    return res.data.data;
+  } catch (error: any) {
+    toast.error(error.response.data.message);
+  }
+}
+

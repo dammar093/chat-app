@@ -11,6 +11,7 @@ const socket_1 = require("./lib/socket");
 //import all router
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
+const message_route_1 = __importDefault(require("./routes/message.route"));
 const db_1 = __importDefault(require("./lib/db"));
 // connect to database
 (0, db_1.default)();
@@ -28,15 +29,9 @@ socket_1.app.use((0, cookie_parser_1.default)());
 // routes middleware
 socket_1.app.use("/api/v1/auth", auth_route_1.default);
 socket_1.app.use("/api/v1/users", user_route_1.default);
+socket_1.app.use("/api/v1/messages", message_route_1.default);
 socket_1.app.get("/", (req, res) => {
     res.send("Hello World");
-});
-socket_1.io.on("connection", socket => {
-    console.log(`user connected: ${socket.id}`);
-    socket.emit("message", "Hello from server");
-    socket.on("disconnect", () => {
-        console.log(`user disconnected: ${socket.id}`);
-    });
 });
 socket_1.server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

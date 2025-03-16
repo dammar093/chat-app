@@ -1,40 +1,122 @@
-import React, { useEffect } from "react";
-import { getAllUsers, logout } from "../state/slices/api/api";
+import {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useCallback,
+  useState,
+} from "react";
+import {
+  getAllUsers,
+  getMessage,
+  logout,
+  sendMessage,
+} from "../state/slices/api/api";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../state/slices/store";
+import { formatMessageTime } from "../utils/utils";
+import toast from "react-hot-toast";
+import { io, Socket } from "socket.io-client";
 
 const Home = () => {
-  const [users, setUsers] = React.useState([]);
+  const [users, setUsers] = useState([]);
+  const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<any>([]);
+  const [activeIndex, setActiveIndex] = useState<Number | null>(null);
   const navigate = useNavigate();
+  const [showChat, setShowChat] = useState<boolean>(false);
+  const [receiver, setReceiver] = useState<string>("");
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const currentUser = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const newSocket = io("http://localhost:3000", {
+      query: { userId: currentUser._id },
+    });
+
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      console.log(`Connected to server with id ${newSocket.id}`);
+    });
+
+    newSocket.on("message", (data) => {
+      toast.success(data);
+    });
+    newSocket.on("getOnlineUsers", (userIds) => {
+      setOnlineUsers(userIds);
+    });
+    newSocket?.on("newMessage", (data) => {
+      setMessages((prev: any) => [...prev, data]);
+    });
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [currentUser]);
+
   useEffect(() => {
     getAll();
-  }, []);
+    console.log("dfdsfs", messages);
+  }, [messages]);
   async function getAll() {
     const users = await getAllUsers();
     setUsers(users);
   }
+
+  const handleUserMessage = async (index: number, id: string) => {
+    setActiveIndex(index);
+    setShowChat(true);
+    setReceiver(id);
+    const messages = await getMessage(id);
+    setMessages(messages);
+  };
+
+  const insertMessage = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!message) return;
+    const data = await sendMessage(receiver, message);
+    setMessages((prev: any) => [...prev, data]);
+    setMessage("");
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+    socket?.disconnect();
+  };
+
   return (
     <main className="w-full h-screen flex justify-between">
       <aside className="bg-gray-800 w-64 h-full shadow-lg relative">
-        {users.map((user: any) => (
+        {users.map((user: any, index: number) => (
           <div
             key={user._id}
-            className="p-4 border-b border-gray-700 flex items-center gap-3 cursor-pointer"
+            className={`p-2 border-b border-gray-700 flex items-center gap-3 cursor-pointer ${
+              activeIndex == index && "bg-slate-500"
+            } ${user._id == currentUser._id && "hidden"}`}
+            onClick={() => handleUserMessage(index, user._id)}
           >
-            <img
-              className="w-10 h-10 rounded-full"
-              src={user?.profilePic}
-              alt={user?.name}
-            />
+            <div className="relative">
+              <img
+                className="w-10 h-10 rounded-full"
+                src={user?.profilePic}
+                alt={user?.name}
+              />
+              <div
+                className={`absolute w-2 h-2 bg-green-400 top-0 right-0 rounded-full ${
+                  onlineUsers.includes(user._id) ? "block" : "hidden"
+                }`}
+              ></div>
+            </div>
             <span className="text-white font-semibold">{user?.name}</span>
           </div>
         ))}
         <div className="w-full absolute bottom-0 left-0 right-0">
           <button
             className="w-full flex items-center justify-center bg-teal-400 py-2 px-4 cursor-pointer"
-            onClick={() => {
-              logout();
-              navigate("/login");
-            }}
+            onClick={handleLogout}
           >
             <span>Logout</span>
             <svg
@@ -44,9 +126,9 @@ const Home = () => {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className="lucide lucide-log-out"
             >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -57,13 +139,39 @@ const Home = () => {
         </div>
       </aside>
       <div className="w-full h-full relative">
-        <div className="w-full h-[500px] bg-slate-700 p-5 flex flex-col overflow-y-auto">
-          <div className="my-2 w-fit max-w-[75%]  leading-4 self-start">
-            <div className="px-4 py-2 text-justify w-full leading-5 bg-slate-500 text-white rounded-r-lg rounded-tl-box ">
-              Hello 👋
+        <div className="w-full h-[550px] bg-slate-700 px-5 flex flex-col overflow-y-auto pb-10">
+          {messages.length > 0 &&
+            messages?.map((message: any) => (
+              <div
+                className={`my-2 w-fit max-w-[75%] leading-4 ${
+                  message?.sender?._id === currentUser?._id
+                    ? "self-end"
+                    : "self-start"
+                }`}
+                key={message?._id}
+              >
+                <div
+                  className={`px-4 py-2 text-justify w-full leading-5 text-white ${
+                    message?.sender?._id === currentUser?._id
+                      ? "rounded-l-lg rounded-tr-lg bg-teal-500"
+                      : "rounded-r-lg rounded-tl-lg bg-slate-500"
+                  }`}
+                >
+                  {message?.message}
+                </div>
+                <div className="text-[12px] text-slate-500">
+                  {formatMessageTime(message?.createdAt)}
+                </div>
+              </div>
+            ))}
+          {messages.length === 0 && (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-[#f2f2f] text-lg font-semibold">
+                {showChat ? "No chat available" : "Chat with your friends"}
+              </span>
             </div>
-            <div className="text-[12px] twxt-slate-500">10:00</div>
-          </div>
+          )}
+          {/* 
           <div className="my-2 w-fit max-w-[75%]  leading-4 self-start">
             <div className="px-4 py-2 text-justify w-full leading-5 bg-slate-500 text-white rounded-r-lg rounded-tl-box ">
               How are you?
@@ -81,17 +189,24 @@ const Home = () => {
               I am fine, and you?
             </div>
             <div className="text-[12px] twxt-slate-500">10:01</div>
-          </div>
+          </div> */}
         </div>
-        <div className="bg-slate-700 w-full h-14 absolute bottom-0 left-0 right-0 flex items-center justify-center">
-          <div className="w-full bg-slate-500 h-10 px-4 ">
-            <form className="w-full h-full flex items-center gap-5">
+        <div className="bg-slate-700 w-full h-10 absolute bottom-0 left-0 right-0 flex items-center justify-center">
+          <div className="w-full bg-slate-500 h-full">
+            <form
+              className="w-full h-full flex items-center gap-5"
+              onSubmit={insertMessage}
+            >
               <input
                 type="text"
-                className="w-[95%] h-full outline-none border-none"
+                className="w-[95%] h-full outline-none border-none px-2"
                 placeholder="Write message..."
+                value={message}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setMessage(e.target.value)
+                }
               />
-              <button type="button">
+              <button type="button" className="cursor-pointer">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -99,16 +214,19 @@ const Home = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-paperclip"
                 >
                   <path d="M13.234 20.252 21 12.3" />
                   <path d="m16 6-8.414 8.586a2 2 0 0 0 0 2.828 2 2 0 0 0 2.828 0l8.414-8.586a4 4 0 0 0 0-5.656 4 4 0 0 0-5.656 0l-8.415 8.585a6 6 0 1 0 8.486 8.486" />
                 </svg>
               </button>
-              <button className="bg-teal-400 px-3 py-2 rounded-sm">
+              <button
+                className="bg-teal-400 px-3 py-2 rounded-sm cursor-pointer"
+                type="submit"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -116,9 +234,9 @@ const Home = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-send-horizontal"
                 >
                   <path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z" />
