@@ -6,7 +6,6 @@ import { getReceiverSocketId, io } from "../lib/socket";
 export const insertMessage = asyncHandler(async (req: Request, res: Response) => {
   const { message, file } = req.body;
   const receiver = req.params?.id
-  //@ts-ignore
   const sender = req.user?.id
   if (!message.trim() || !receiver && !file) {
     return res.status(400).json({

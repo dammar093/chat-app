@@ -9,8 +9,7 @@ const verifyJwtToken = asyncHandler(async (req: Request, res: Response, next: Ne
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    // @ts-ignore
-    req.user = decoded;
+    req.user = decoded as { id?: string; name?: string; email?: string; password?: string };
     next();
   } catch (err: any) {
     return res.status(401).json({ message: "Unauthorized", success: false, data: null });

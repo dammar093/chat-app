@@ -22,7 +22,6 @@ const verifyJwtToken = (0, asyncHandler_1.default)((req, res, next) => __awaiter
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        // @ts-ignore
         req.user = decoded;
         next();
     }

@@ -20,7 +20,6 @@ exports.insertMessage = (0, asyncHandler_1.default)((req, res) => __awaiter(void
     var _a, _b;
     const { message, file } = req.body;
     const receiver = (_a = req.params) === null || _a === void 0 ? void 0 : _a.id;
-    //@ts-ignore
     const sender = (_b = req.user) === null || _b === void 0 ? void 0 : _b.id;
     if (!message.trim() || !receiver && !file) {
         return res.status(400).json({
