@@ -3,11 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../state/slices/store";
 import { getLoggedInUser } from "../state/slices/api/api";
 import { setUser } from "../state/slices/userSlice";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const Auth = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const token =
     useSelector((state: RootState) => state.auth.token) ||
     localStorage.getItem("token");
@@ -20,7 +19,7 @@ const Auth = ({ children }: { children: React.ReactNode }) => {
     currentUser();
   }, [dispatch, token]);
   if (!token) {
-    navigate("/");
+    return <Navigate to={"/login"} />;
   }
   return <>{children}</>;
 };
