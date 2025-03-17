@@ -50,8 +50,9 @@ const user_model_1 = __importStar(require("../models/user.model"));
 const generateJwtToken_1 = __importDefault(require("../utils/generateJwtToken"));
 const asyncHandler_1 = __importDefault(require("../utils/asyncHandler"));
 exports.userSignup = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password, fullname } = req.body;
-    if (!email.trim() || !password.trim() || !fullname.trim()) {
+    const { email, password, name } = req.body;
+    console.log(email, password, name);
+    if (!(email === null || email === void 0 ? void 0 : email.trim()) || !(password === null || password === void 0 ? void 0 : password.trim()) || !(name === null || name === void 0 ? void 0 : name.trim())) {
         return res.status(400).json({ message: "All fields are required.", success: false, data: null });
     }
     if (password.length < 6) {
@@ -62,7 +63,7 @@ exports.userSignup = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0,
         if (exitinhUser.length > 0) {
             return res.status(400).json({ message: "User already exists.", success: false, data: null });
         }
-        const user = yield user_model_1.default.create({ email, password, name: fullname });
+        const user = yield user_model_1.default.create({ email, password, name: name });
         const token = (0, generateJwtToken_1.default)(user._id);
         return res.cookie("token", token).status(201).json({
             message: "User created successfully.", success: true, data: {

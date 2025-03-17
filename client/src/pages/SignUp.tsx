@@ -1,11 +1,32 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { resgisterUser } from "../state/slices/api/api";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../state/slices/store";
+import { setToken } from "../state/slices/authSlice";
 
-const Login = () => {
+const SignUp = () => {
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
+  const signUpUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const token = await resgisterUser(name, email, password);
+    dispatch(setToken(token));
+    if (token) {
+      setName("");
+      setEmail("");
+      setPassword("");
+      navigate("/");
+    }
+  };
   return (
     <div className="w-full h-screen flex justify-center items-center">
       <div className="card bg-base border-1 border-white w-96 shadow-sm p-2">
-        <form className="flex flex-col gap-4 p-6">
+        <form className="flex flex-col gap-4 p-6" onSubmit={signUpUser}>
           <h2 className="text-2xl font-semibold">Create an account</h2>
           <div className="form-control">
             <label className="input validator">
@@ -31,6 +52,8 @@ const Login = () => {
                 placeholder="Fullname"
                 minLength={3}
                 maxLength={30}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 title="Must be 3 to 30 characters"
               />
             </label>
@@ -55,7 +78,13 @@ const Login = () => {
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                 </g>
               </svg>
-              <input type="email" placeholder="Enter Email" required />
+              <input
+                type="email"
+                placeholder="Enter Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </label>
             <div className="validator-hint hidden">
               Enter valid email address
@@ -90,6 +119,8 @@ const Login = () => {
                 required
                 placeholder="Password"
                 minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 title="Password must be at least 6 characters long"
               />
             </label>
@@ -114,4 +145,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;

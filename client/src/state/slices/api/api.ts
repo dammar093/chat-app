@@ -1,7 +1,19 @@
 import toast from "react-hot-toast";
 import api from "./axiosConfig";
 
-// Register user api call
+
+// resgister user api call
+export const resgisterUser = async (name: string, email: string, password: string) => {
+  try {
+    const res = await api.post("/api/v1/auth/signup", { name, email, password });
+    toast.success(res.data.message);
+    localStorage.setItem("token", res.data.data?.token);
+    return res.data.data.token;
+  } catch (error: any) {
+    toast.error(error.response.data.message);
+  }
+}
+// login user api call
 export const login = async (email: string, password: string) => {
   try {
     const res = await api.post("/api/v1/auth/login", { email, password });
@@ -12,6 +24,8 @@ export const login = async (email: string, password: string) => {
     toast.error(error.response.data.message);
   }
 }
+
+
 
 // Get loggedIn user api call
 export const getLoggedInUser = async () => {

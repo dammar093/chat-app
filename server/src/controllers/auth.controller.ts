@@ -5,9 +5,11 @@ import asyncHandler from "../utils/asyncHandler";
 
 
 export const userSignup = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password, fullname } = req.body;
+  const { email, password, name } = req.body;
 
-  if (!email.trim() || !password.trim() || !fullname.trim()) {
+  console.log(email, password, name)
+
+  if (!email?.trim() || !password?.trim() || !name?.trim()) {
     return res.status(400).json({ message: "All fields are required.", success: false, data: null });
   }
   if (password.length < 6) {
@@ -18,7 +20,7 @@ export const userSignup = asyncHandler(async (req: Request, res: Response) => {
     if (exitinhUser.length > 0) {
       return res.status(400).json({ message: "User already exists.", success: false, data: null });
     }
-    const user = await User.create({ email, password, name: fullname });
+    const user = await User.create({ email, password, name: name });
     const token = generateJwtToken(user._id);
     return res.cookie("token", token).status(201).json({
       message: "User created successfully.", success: true, data: {
