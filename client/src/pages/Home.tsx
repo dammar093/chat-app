@@ -33,6 +33,8 @@ const Home = () => {
       dispatch(setOnline(userIds));
     });
     newSocket?.on("newMessage", (data) => {
+      console.log(data);
+
       dispatch(addMessage(data));
     });
     return () => {
