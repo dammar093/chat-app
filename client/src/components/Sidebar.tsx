@@ -49,7 +49,7 @@ const Sidebar = ({
   };
   return (
     <aside className="bg-gray-800 w-64 h-full shadow-lg relative">
-      {users.map((user: any, index: number) => (
+      {users?.map((user: any, index: number) => (
         <div
           key={user._id}
           className={`p-2 border-b border-gray-700 flex items-center gap-3 cursor-pointer ${

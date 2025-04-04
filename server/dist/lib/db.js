@@ -13,11 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 function connectDB() {
     return __awaiter(this, void 0, void 0, function* () {
         // connect to database
         try {
-            const conn = yield mongoose_1.default.connect("mongodb://localhost:27017/chat-app");
+            const conn = yield mongoose_1.default.connect(`${process.env.MONGO_URI}/chat-app`);
             console.log(`MongoDB connected: ${conn.connection.host}`);
         }
         catch (error) {

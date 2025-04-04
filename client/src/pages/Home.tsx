@@ -19,7 +19,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!currentUser) return;
-    const newSocket = io("http://localhost:3000", {
+    const newSocket = io("https://real-time-chat-api-bndl.onrender.com/", {
       query: { userId: currentUser._id },
     });
     newSocket.on("connect", () => {
